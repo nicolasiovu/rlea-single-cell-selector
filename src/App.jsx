@@ -361,15 +361,15 @@ export default function ImageCropUploader() {
         0, 0, 512, 512
       );
       
-      // Convert to blob
+      // Convert to JPEG blob (quality 0.92 is a solid default)
       const blob = await new Promise((resolve) => {
-        canvas.toBlob(resolve, 'image/png');
+        canvas.toBlob(resolve, 'image/jpeg', 0.92);
       });
       
       // Generate filename
       const baseName = currentFileName.replace(/\.[^/.]+$/, '');
       const cropNumber = savedCrops.length + 1;
-      const newFileName = `${baseName}_crop${cropNumber}.png`;
+      const newFileName = `${baseName}_crop${cropNumber}.jpg`;
       
       // Upload to Google Drive
       const metadata = {
@@ -379,7 +379,7 @@ export default function ImageCropUploader() {
       
       const form = new FormData();
       form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      form.append('file', blob);
+      form.append('file', blob, newFileName);
       
       await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
