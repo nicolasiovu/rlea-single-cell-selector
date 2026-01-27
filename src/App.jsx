@@ -295,10 +295,21 @@ export default function ImageCropUploader() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
+    // Calculate deltas from start point
+    const deltaX = x - cropBox.startX;
+    const deltaY = y - cropBox.startY;
+    
+    // Use the smaller absolute value to maintain a square
+    const size = Math.min(Math.abs(deltaX), Math.abs(deltaY));
+    
+    // Preserve direction based on which way the mouse moved
+    const signX = deltaX >= 0 ? 1 : -1;
+    const signY = deltaY >= 0 ? 1 : -1;
+    
     setCropBox({
       ...cropBox,
-      width: x - cropBox.startX,
-      height: y - cropBox.startY
+      width: size * signX,
+      height: size * signY
     });
   };
 
@@ -997,7 +1008,7 @@ export default function ImageCropUploader() {
                     borderRadius: '8px',
                     border: '1px solid rgba(99, 102, 241, 0.1)'
                   }}>
-                    DRAG to select region • ENTER to upload • N for next • ESC to clear • ← → navigate
+                    DRAG to select square region • ENTER to upload • N for next • ESC to clear • ← → navigate
                   </div>
 
                   <div style={{
@@ -1083,7 +1094,7 @@ export default function ImageCropUploader() {
                               fontFamily: '"Space Mono", monospace',
                               whiteSpace: 'nowrap'
                             }}>
-                              {Math.round(Math.abs(cropBox.width) / imageScale.scaleX)} × {Math.round(Math.abs(cropBox.height) / imageScale.scaleY)}px
+                              {Math.round(Math.abs(cropBox.width) / imageScale.scaleX)}px square
                             </div>
                           </div>
                         )}
