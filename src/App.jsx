@@ -6,7 +6,7 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
 const START_FOLDER_ID = import.meta.env.VITE_START_FOLDER_ID;
 const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD;
 
-export default function App() {
+export default function ImageCropUploader() {
   const [screen, setScreen] = useState('login');
   const [accessToken, setAccessToken] = useState(null);
   const [currentFolderId, setCurrentFolderId] = useState(START_FOLDER_ID);
@@ -438,38 +438,15 @@ export default function App() {
       overflow: 'hidden',
       position: 'relative'
     }}>
-      {/* Ambient background effect */}
-      <div style={{
-        position: 'absolute',
-        top: '-50%',
-        right: '-20%',
-        width: '70%',
-        height: '140%',
-        background: 'radial-gradient(ellipse at center, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
-        pointerEvents: 'none',
-        animation: 'float 20s ease-in-out infinite'
-      }} />
-      
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-        
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-30px, 50px) scale(1.05); }
-        }
-        
-        @keyframes shimmer {
-          0% { background-position: -1000px 0; }
-          100% { background-position: 1000px 0; }
-        }
         
         .crop-box {
           position: absolute;
           border: 3px solid #6366f1;
           background: rgba(99, 102, 241, 0.15);
-          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3), 0 0 30px rgba(99, 102, 241, 0.4);
+          box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
           pointer-events: none;
-          backdrop-filter: blur(2px);
         }
         
         .saved-crop {
@@ -477,6 +454,20 @@ export default function App() {
           border: 2px dashed #10b981;
           background: rgba(16, 185, 129, 0.08);
           pointer-events: none;
+        }
+        
+        .image-container {
+          user-select: none;
+          -webkit-user-drag: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+        }
+        
+        .image-container img {
+          pointer-events: none;
+          user-select: none;
+          -webkit-user-drag: none;
         }
       `}</style>
 
@@ -639,17 +630,10 @@ export default function App() {
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                   fontFamily: '"Space Mono", monospace',
-                  boxShadow: '0 8px 20px rgba(99, 102, 241, 0.4)',
-                  transition: 'all 0.2s'
+                  transition: 'opacity 0.2s'
                 }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 12px 28px rgba(99, 102, 241, 0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.4)';
-                }}
+                onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+                onMouseLeave={(e) => e.target.style.opacity = '1'}
               >
                 Authenticate
               </button>
@@ -697,16 +681,10 @@ export default function App() {
                     justifyContent: 'center',
                     gap: '12px',
                     color: '#f8fafc',
-                    transition: 'all 0.2s'
+                    transition: 'background 0.2s'
                   }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = 'rgba(99, 102, 241, 0.1)';
-                    e.target.style.borderColor = '#6366f1';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.target.style.borderColor = 'rgba(99, 102, 241, 0.3)';
-                  }}
+                  onMouseEnter={(e) => e.target.style.background = 'rgba(99, 102, 241, 0.1)'}
+                  onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -763,17 +741,11 @@ export default function App() {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '12px',
-                          transition: 'all 0.2s',
+                          transition: 'background 0.2s',
                           color: '#f8fafc'
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)';
-                          e.currentTarget.style.transform = 'translateX(4px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.transform = 'translateX(0)';
-                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                       >
                         <Folder size={20} color="#6366f1" />
                         {folder.name}
@@ -796,18 +768,14 @@ export default function App() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '8px',
-                      transition: 'all 0.2s',
+                      transition: 'background 0.2s',
                       fontFamily: '"Space Mono", monospace',
                       fontSize: '13px',
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em'
                     }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'rgba(71, 85, 105, 0.5)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(71, 85, 105, 0.3)';
-                    }}
+                    onMouseEnter={(e) => e.target.style.background = 'rgba(71, 85, 105, 0.5)'}
+                    onMouseLeave={(e) => e.target.style.background = 'rgba(71, 85, 105, 0.3)'}
                   >
                     <ChevronLeft size={18} />
                     Go Back
@@ -869,17 +837,10 @@ export default function App() {
                             textTransform: 'uppercase',
                             letterSpacing: '0.05em',
                             fontFamily: '"Space Mono", monospace',
-                            transition: 'all 0.2s',
-                            boxShadow: `0 4px 12px ${color}40`
+                            transition: 'opacity 0.2s'
                           }}
-                          onMouseEnter={(e) => {
-                            e.target.style.transform = 'translateY(-2px)';
-                            e.target.style.boxShadow = `0 6px 16px ${color}60`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.transform = 'translateY(0)';
-                            e.target.style.boxShadow = `0 4px 12px ${color}40`;
-                          }}
+                          onMouseEnter={(e) => e.target.style.opacity = '0.85'}
+                          onMouseLeave={(e) => e.target.style.opacity = '1'}
                         >
                           Set Folder
                         </button>
@@ -905,21 +866,10 @@ export default function App() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                         fontFamily: '"Space Mono", monospace',
-                        boxShadow: allFoldersSet ? '0 8px 20px rgba(16, 185, 129, 0.4)' : 'none',
-                        transition: 'all 0.2s'
+                        transition: 'opacity 0.2s'
                       }}
-                      onMouseEnter={(e) => {
-                        if (allFoldersSet) {
-                          e.target.style.transform = 'translateY(-2px)';
-                          e.target.style.boxShadow = '0 12px 28px rgba(16, 185, 129, 0.5)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (allFoldersSet) {
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 8px 20px rgba(16, 185, 129, 0.4)';
-                        }
-                      }}
+                      onMouseEnter={(e) => { if (allFoldersSet) e.target.style.opacity = '0.9'; }}
+                      onMouseLeave={(e) => { if (allFoldersSet) e.target.style.opacity = '1'; }}
                     >
                       Begin Processing →
                     </button>
@@ -933,11 +883,7 @@ export default function App() {
             <div>
               {allComplete ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                  <div style={{ 
-                    fontSize: '80px', 
-                    marginBottom: '20px',
-                    animation: 'float 3s ease-in-out infinite'
-                  }}>
+                  <div style={{ fontSize: '80px', marginBottom: '20px' }}>
                     🎉
                   </div>
                   <h1 style={{ 
@@ -972,14 +918,10 @@ export default function App() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                         fontFamily: '"Space Mono", monospace',
-                        transition: 'all 0.2s'
+                        transition: 'background 0.2s'
                       }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'rgba(99, 102, 241, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'rgba(99, 102, 241, 0.2)';
-                      }}
+                      onMouseEnter={(e) => e.target.style.background = 'rgba(99, 102, 241, 0.3)'}
+                      onMouseLeave={(e) => e.target.style.background = 'rgba(99, 102, 241, 0.2)'}
                     >
                       ← Folder Selection
                     </button>
@@ -997,15 +939,10 @@ export default function App() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                         fontFamily: '"Space Mono", monospace',
-                        boxShadow: '0 8px 20px rgba(16, 185, 129, 0.4)',
-                        transition: 'all 0.2s'
+                        transition: 'opacity 0.2s'
                       }}
-                      onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                      }}
+                      onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+                      onMouseLeave={(e) => e.target.style.opacity = '1'}
                     >
                       Process More →
                     </button>
@@ -1068,7 +1005,8 @@ export default function App() {
                     border: '2px solid rgba(99, 102, 241, 0.2)',
                     borderRadius: '12px',
                     padding: '20px',
-                    minHeight: '550px',
+                    minHeight: '700px',
+                    maxHeight: '700px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1079,25 +1017,31 @@ export default function App() {
                     {currentImage ? (
                       <div
                         ref={imageRef}
+                        className="image-container"
                         onMouseDown={handleCanvasMouseDown}
                         onMouseMove={handleCanvasMouseMove}
                         onMouseUp={handleCanvasMouseUp}
                         onMouseLeave={handleCanvasMouseUp}
+                        onDragStart={(e) => e.preventDefault()}
                         style={{
                           position: 'relative',
                           cursor: 'crosshair',
-                          userSelect: 'none'
+                          userSelect: 'none',
+                          WebkitUserSelect: 'none'
                         }}
                       >
                         <img 
                           src={currentImage} 
                           alt="Current" 
+                          draggable="false"
                           style={{
                             maxWidth: '100%',
-                            maxHeight: '500px',
+                            maxHeight: '660px',
                             borderRadius: '8px',
                             display: 'block',
-                            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)'
+                            pointerEvents: 'none',
+                            userSelect: 'none',
+                            WebkitUserDrag: 'none'
                           }} 
                         />
                         
@@ -1194,14 +1138,10 @@ export default function App() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px',
-                        transition: 'all 0.2s'
+                        transition: 'background 0.2s'
                       }}
-                      onMouseEnter={(e) => {
-                        if (currentImage) e.target.style.background = 'rgba(139, 92, 246, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (currentImage) e.target.style.background = 'rgba(139, 92, 246, 0.2)';
-                      }}
+                      onMouseEnter={(e) => { if (currentImage) e.target.style.background = 'rgba(139, 92, 246, 0.3)'; }}
+                      onMouseLeave={(e) => { if (currentImage) e.target.style.background = 'rgba(139, 92, 246, 0.2)'; }}
                     >
                       <Square size={16} />
                       New 512×512
@@ -1228,21 +1168,10 @@ export default function App() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px',
-                        boxShadow: cropBox && !uploadingCrop ? '0 4px 12px rgba(16, 185, 129, 0.4)' : 'none',
-                        transition: 'all 0.2s'
+                        transition: 'opacity 0.2s'
                       }}
-                      onMouseEnter={(e) => {
-                        if (cropBox && !uploadingCrop) {
-                          e.target.style.transform = 'translateY(-2px)';
-                          e.target.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.5)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (cropBox && !uploadingCrop) {
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
-                        }
-                      }}
+                      onMouseEnter={(e) => { if (cropBox && !uploadingCrop) e.target.style.opacity = '0.9'; }}
+                      onMouseLeave={(e) => { if (cropBox && !uploadingCrop) e.target.style.opacity = '1'; }}
                     >
                       <Upload size={16} />
                       {uploadingCrop ? 'Uploading...' : 'Upload Crop'}
@@ -1267,14 +1196,10 @@ export default function App() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px',
-                        transition: 'all 0.2s'
+                        transition: 'background 0.2s'
                       }}
-                      onMouseEnter={(e) => {
-                        if (currentImage) e.target.style.background = 'rgba(245, 158, 11, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (currentImage) e.target.style.background = 'rgba(245, 158, 11, 0.2)';
-                      }}
+                      onMouseEnter={(e) => { if (currentImage) e.target.style.background = 'rgba(245, 158, 11, 0.3)'; }}
+                      onMouseLeave={(e) => { if (currentImage) e.target.style.background = 'rgba(245, 158, 11, 0.2)'; }}
                     >
                       <CheckCircle size={16} />
                       Done (N)
@@ -1298,14 +1223,10 @@ export default function App() {
                         letterSpacing: '0.05em',
                         fontFamily: '"Space Mono", monospace',
                         fontSize: '13px',
-                        transition: 'all 0.2s'
+                        transition: 'background 0.2s'
                       }}
-                      onMouseEnter={(e) => {
-                        if (currentImage) e.target.style.background = 'rgba(71, 85, 105, 0.5)';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (currentImage) e.target.style.background = 'rgba(71, 85, 105, 0.3)';
-                      }}
+                      onMouseEnter={(e) => { if (currentImage) e.target.style.background = 'rgba(71, 85, 105, 0.5)'; }}
+                      onMouseLeave={(e) => { if (currentImage) e.target.style.background = 'rgba(71, 85, 105, 0.3)'; }}
                     >
                       ← Previous
                     </button>
@@ -1325,14 +1246,10 @@ export default function App() {
                         letterSpacing: '0.05em',
                         fontFamily: '"Space Mono", monospace',
                         fontSize: '13px',
-                        transition: 'all 0.2s'
+                        transition: 'background 0.2s'
                       }}
-                      onMouseEnter={(e) => {
-                        if (currentImage) e.target.style.background = 'rgba(71, 85, 105, 0.5)';
-                      }}
-                      onMouseLeave={(e) => {
-                        if (currentImage) e.target.style.background = 'rgba(71, 85, 105, 0.3)';
-                      }}
+                      onMouseEnter={(e) => { if (currentImage) e.target.style.background = 'rgba(71, 85, 105, 0.5)'; }}
+                      onMouseLeave={(e) => { if (currentImage) e.target.style.background = 'rgba(71, 85, 105, 0.3)'; }}
                     >
                       Next →
                     </button>
