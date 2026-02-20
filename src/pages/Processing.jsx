@@ -516,7 +516,7 @@ export default function Processing({ config, accessToken }) {
               }}
             >
               <CheckCircle size={16} />
-              {isMoving ? 'Moving...' : Done (N)}
+              {isMoving ? 'Moving...' : 'Done (N)'}
             </button>
           </div>
 
