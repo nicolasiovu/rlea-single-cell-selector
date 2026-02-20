@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Square, Upload, CheckCircle } from 'lucide-react';
 import LabelSelector from '../components/LabelSelector';
 import { createCrop, getCropMetadata } from '../utils/imageCrop';
-import { uploadCroppedImage, batchMoveFiles } from '../utils/driveApi';
+// Switched from batchMoveFiles to just moveFile
+import { uploadCroppedImage, moveFile } from '../utils/driveApi'; 
 import { useImageManager } from '../hooks/useImageManager';
 
 export default function Processing({ config, accessToken }) {
@@ -46,11 +47,9 @@ export default function Processing({ config, accessToken }) {
 
   const handleCanvasMouseDown = (e) => {
     if (!imageRef.current) return;
-    
     const rect = imageRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
     const defaultSize = 512 * imageScale.scaleX;
     
     setCropBox({
@@ -64,16 +63,13 @@ export default function Processing({ config, accessToken }) {
 
   const handleCanvasMouseMove = (e) => {
     if (!isDrawing || !cropBox || !imageRef.current) return;
-    
     const rect = imageRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
     const deltaX = x - cropBox.startX;
     const deltaY = y - cropBox.startY;
-    
     const size = Math.min(Math.abs(deltaX), Math.abs(deltaY));
-    
     const signX = deltaX >= 0 ? 1 : -1;
     const signY = deltaY >= 0 ? 1 : -1;
     
@@ -84,9 +80,7 @@ export default function Processing({ config, accessToken }) {
     });
   };
 
-  const handleCanvasMouseUp = () => {
-    setIsDrawing(false);
-  };
+  const handleCanvasMouseUp = () => setIsDrawing(false);
 
   const resetCropBox = () => {
     if (!imageRef.current) return;
@@ -108,24 +102,20 @@ export default function Processing({ config, accessToken }) {
   const handleLabelSelected = async (label) => {
     setShowLabelSelector(false);
     if (!pendingCrop) return;
-    
     await cropAndUpload(pendingCrop, label);
     setPendingCrop(null);
   };
 
   const cropAndUpload = async (cropBoxToUse, label) => {
     if (!currentImage || !imageRef.current) return;
-    
     setUploadingCrop(true);
     
     try {
       const blob = await createCrop(currentImage, cropBoxToUse, imageScale);
-      
       const baseName = currentFileName.replace(/\.[^/.]+$/, '');
       const randomId = Math.random().toString(36).substr(2, 9);
       const cropNumber = savedCrops.length + 1;
       const newFileName = `${baseName}_${randomId}_crop${cropNumber}.png`;
-      
       const metadata = getCropMetadata(cropBoxToUse, imageScale, currentFileName, label);
       
       await uploadCroppedImage(
@@ -141,7 +131,6 @@ export default function Processing({ config, accessToken }) {
         fileName: newFileName,
         label: label
       }]);
-      
       setCropBox(null);
       
     } catch (error) {
@@ -153,14 +142,27 @@ export default function Processing({ config, accessToken }) {
   };
 
   const markAsComplete = async () => {
-    markAsProcessed();
-    
-    const result = await goToNext();
-    if (result === 'complete') {
-      setAllComplete(true);
-    } else {
-      setSavedCrops([]);
-      setCropBox(null);
+    try {
+      // Move immediately to completed folder upon clicking 'Done'
+      await moveFile(
+        currentFileId,
+        config.completed.id,
+        config.processed.id,
+        accessToken
+      );
+
+      markAsProcessed();
+      
+      const result = await goToNext();
+      if (result === 'complete') {
+        setAllComplete(true);
+      } else {
+        setSavedCrops([]);
+        setCropBox(null);
+      }
+    } catch (error) {
+       alert('Error moving file: ' + error.message);
+       console.error(error);
     }
   };
 
@@ -184,34 +186,6 @@ export default function Processing({ config, accessToken }) {
     }
   };
 
-  const finishAndMoveCompleted = async () => {
-    if (processedFileIds.size === 0) {
-      navigate('/folders');
-      return;
-    }
-
-    const confirmMove = window.confirm(
-      `Move ${processedFileIds.size} completed images to the completed folder?`
-    );
-    
-    if (confirmMove) {
-      try {
-        await batchMoveFiles(
-          Array.from(processedFileIds),
-          config.completed.id,
-          config.processed.id,
-          accessToken
-        );
-        alert(`Successfully moved ${processedFileIds.size} images!`);
-      } catch (error) {
-        alert('Error moving files: ' + error.message);
-      }
-    }
-    
-    reset();
-    navigate('/folders');
-  };
-
   useEffect(() => {
     if (!currentImage || allComplete) return;
     
@@ -232,9 +206,7 @@ export default function Processing({ config, accessToken }) {
 
   const remaining = images.length - processedIndices.size;
 
-  if (!config || !accessToken) {
-    return null;
-  }
+  if (!config || !accessToken) return null;
 
   return (
     <div>
@@ -245,32 +217,11 @@ export default function Processing({ config, accessToken }) {
             Batch Complete!
           </h1>
           <p style={{ color: '#94a3b8', fontSize: '18px', marginBottom: '10px' }}>
-            You've processed all {images.length} images in this batch.
+            You've processed and moved all {images.length} images in this batch.
           </p>
-          <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '40px', fontFamily: '"Space Mono", monospace' }}>
-            {processedFileIds.size} images ready to move to completed folder
-          </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '40px' }}>
             <button
-              onClick={() => navigate('/folders')}
-              style={{
-                padding: '16px 32px',
-                background: 'rgba(99, 102, 241, 0.2)',
-                border: '2px solid #6366f1',
-                color: '#a5b4fc',
-                borderRadius: '10px',
-                fontSize: '15px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                fontFamily: '"Space Mono", monospace'
-              }}
-            >
-              ← Skip Move
-            </button>
-            <button
-              onClick={finishAndMoveCompleted}
+              onClick={() => { reset(); navigate('/folders'); }}
               style={{
                 padding: '16px 32px',
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
@@ -285,7 +236,7 @@ export default function Processing({ config, accessToken }) {
                 fontFamily: '"Space Mono", monospace'
               }}
             >
-              Move & Finish →
+              Return to Folders →
             </button>
           </div>
         </div>
@@ -346,7 +297,7 @@ export default function Processing({ config, accessToken }) {
             borderRadius: '8px',
             border: '1px solid rgba(99, 102, 241, 0.1)'
           }}>
-            DRAG for square • ENTER upload • N next • S new box • ESC clear • ← → navigate
+            DRAG for square • ENTER upload • N mark done & move • S new box • ESC clear • ← → navigate
           </div>
 
           <div style={{

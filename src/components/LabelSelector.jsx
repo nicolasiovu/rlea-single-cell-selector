@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
-const PRESET_LABELS = ['phytolith', 'diatom', 'pollen', 'starch', 'sponge spicule', 'other'];
+const PRESET_LABELS = ['phytolith', 'artifact', 'background', 'unspecified'];
 
 export default function LabelSelector({ onSelect, onCancel, defaultLabel = 'phytolith' }) {
   const [customLabel, setCustomLabel] = useState('');

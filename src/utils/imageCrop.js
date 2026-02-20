@@ -18,17 +18,14 @@ export async function createCrop(imageSrc, cropBox, imageScale) {
     img.onerror = reject;
   });
   
-  // FIXED: Use the actual start position, accounting for negative widths/heights
   const actualStartX = cropBox.width >= 0 ? cropBox.startX : cropBox.startX + cropBox.width;
   const actualStartY = cropBox.height >= 0 ? cropBox.startY : cropBox.startY + cropBox.height;
   
-  // Calculate crop coordinates in original image space
   const cropX = actualStartX / imageScale.scaleX;
   const cropY = actualStartY / imageScale.scaleY;
   const cropWidth = Math.abs(cropBox.width) / imageScale.scaleX;
   const cropHeight = Math.abs(cropBox.height) / imageScale.scaleY;
   
-  // Draw and scale to 512x512
   ctx.drawImage(
     img,
     cropX, cropY, cropWidth, cropHeight,
@@ -55,7 +52,6 @@ export function getCropMetadata(cropBox, imageScale, originalFileName, label) {
       width: Math.round(Math.abs(cropBox.width) / imageScale.scaleX),
       height: Math.round(Math.abs(cropBox.height) / imageScale.scaleY)
     },
-    label: label,
-    timestamp: Date.now()
+    label: label
   };
 }

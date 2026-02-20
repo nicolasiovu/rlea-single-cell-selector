@@ -41,23 +41,20 @@ export async function downloadImage(fileId, accessToken) {
 }
 
 export async function uploadCroppedImage(blob, fileName, parentFolderId, metadata, accessToken) {
+  // Create a human-readable description
+  const readableDescription = `Label: ${metadata.label}\nOriginal Image: ${metadata.originalImage}\nCrop Location: X: ${metadata.cropLocation.x}, Y: ${metadata.cropLocation.y}, Width: ${metadata.cropLocation.width}, Height: ${metadata.cropLocation.height}`;
+
   const fileMetadata = {
     name: fileName,
     parents: [parentFolderId],
-    description: JSON.stringify({
-      originalImage: metadata.originalImage,
-      cropLocation: metadata.cropLocation,
-      label: metadata.label,
-      timestamp: metadata.timestamp
-    }),
+    description: readableDescription,
     appProperties: {
       originalImage: metadata.originalImage,
       cropX: String(metadata.cropLocation.x),
       cropY: String(metadata.cropLocation.y),
       cropWidth: String(metadata.cropLocation.width),
       cropHeight: String(metadata.cropLocation.height),
-      label: metadata.label,
-      timestamp: String(metadata.timestamp)
+      label: metadata.label
     }
   };
   
