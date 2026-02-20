@@ -72,42 +72,56 @@ export async function uploadCroppedImage(blob, fileName, parentFolderId, metadat
   return await response.json();
 }
 
-export async function moveFile(fileId, newParentId, accessToken) {
-  // 1. Get current parents
-  const parentRes = await fetch(
-    `${DRIVE_API_BASE}/files/${fileId}?fields=parents`,
-    { headers: { Authorization: `Bearer ${accessToken}` } }
-  );
-
-  if (!parentRes.ok) {
-    throw new Error('Failed to fetch current file parents');
-  }
-
-  const parentData = await parentRes.json();
-  const previousParents = parentData.parents?.join(',') || '';
-
-  // 2. Move file (with the required JSON body and headers)
+export async function copyFile(fileId, newParentId, accessToken) {
   const response = await fetch(
-    `${DRIVE_API_BASE}/files/${fileId}?addParents=${newParentId}&removeParents=${previousParents}`,
+    `${DRIVE_API_BASE}/files/${fileId}/copy`,
     {
-      method: 'PATCH',
-      headers: { 
+      method: 'POST',
+      headers: {
         'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json' // Crucial for Drive API PATCH
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({}) // Crucial for Drive API PATCH
+      // Assign the new parent to the copied file
+      body: JSON.stringify({ parents: [newParentId] })
     }
   );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || response.statusText);
+    throw new Error(`Copy failed: ${errorData.error?.message || response.statusText}`);
   }
 
   return await response.json();
 }
 
-// Update batchMoveFiles to match the new signature (no oldParentId)
+export async function deleteFile(fileId, accessToken) {
+  const response = await fetch(
+    `${DRIVE_API_BASE}/files/${fileId}`,
+    {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(`Delete failed: ${errorData.error?.message || response.statusText}`);
+  }
+  
+  return true;
+}
+
+export async function moveFile(fileId, newParentId, accessToken) {
+  // Step 1: Copy the file to the completed folder
+  const copiedFile = await copyFile(fileId, newParentId, accessToken);
+  
+  // Step 2: Delete the original file from the input folder
+  await deleteFile(fileId, accessToken);
+  
+  return copiedFile; // Return the new file reference just in case
+}
+
+// Keep this in case you ever want to revert back to batch processing later
 export async function batchMoveFiles(fileIds, newParentId, accessToken) {
   const promises = fileIds.map(fileId => 
     moveFile(fileId, newParentId, accessToken)
