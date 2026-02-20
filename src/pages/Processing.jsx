@@ -142,16 +142,16 @@ export default function Processing({ config, accessToken }) {
     }
   };
 
- const markAsComplete = async () => {
+  const markAsComplete = async () => {
     if (isMoving) return;
-    setIsMoving(true); // Disable button
+    setIsMoving(true); 
 
     try {
       // Move immediately to completed folder upon clicking 'Done'
+      // We removed config.processed.id from here!
       await moveFile(
         currentFileId,
         config.completed.id,
-        config.processed.id,
         accessToken
       );
 
@@ -168,7 +168,7 @@ export default function Processing({ config, accessToken }) {
        alert('Error moving file: ' + error.message);
        console.error(error);
     } finally {
-      setIsMoving(false); // Re-enable button
+      setIsMoving(false); 
     }
   };
 

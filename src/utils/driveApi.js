@@ -72,32 +72,45 @@ export async function uploadCroppedImage(blob, fileName, parentFolderId, metadat
   return await response.json();
 }
 
-export async function moveFile(fileId, newParentId, oldParentId, accessToken) {
+export async function moveFile(fileId, newParentId, accessToken) {
+  // 1. Get current parents
+  const parentRes = await fetch(
+    `${DRIVE_API_BASE}/files/${fileId}?fields=parents`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+
+  if (!parentRes.ok) {
+    throw new Error('Failed to fetch current file parents');
+  }
+
+  const parentData = await parentRes.json();
+  const previousParents = parentData.parents?.join(',') || '';
+
+  // 2. Move file (with the required JSON body and headers)
   const response = await fetch(
-    `${DRIVE_API_BASE}/files/${fileId}?addParents=${newParentId}&removeParents=${oldParentId}`,
+    `${DRIVE_API_BASE}/files/${fileId}?addParents=${newParentId}&removeParents=${previousParents}`,
     {
       method: 'PATCH',
       headers: { 
         'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json' // Added missing header
+        'Content-Type': 'application/json' // Crucial for Drive API PATCH
       },
-      body: JSON.stringify({}) // Drive API requires a body for PATCH requests
+      body: JSON.stringify({}) // Crucial for Drive API PATCH
     }
   );
-  
+
   if (!response.ok) {
-    // Attempt to parse the exact error message from Google's response
     const errorData = await response.json().catch(() => ({}));
-    const errorMessage = errorData.error?.message || response.statusText || response.status;
-    throw new Error(errorMessage);
+    throw new Error(errorData.error?.message || response.statusText);
   }
-  
+
   return await response.json();
 }
 
-export async function batchMoveFiles(fileIds, newParentId, oldParentId, accessToken) {
+// Update batchMoveFiles to match the new signature (no oldParentId)
+export async function batchMoveFiles(fileIds, newParentId, accessToken) {
   const promises = fileIds.map(fileId => 
-    moveFile(fileId, newParentId, oldParentId, accessToken)
+    moveFile(fileId, newParentId, accessToken)
   );
   return await Promise.all(promises);
 }
