@@ -77,11 +77,21 @@ export async function moveFile(fileId, newParentId, oldParentId, accessToken) {
     `${DRIVE_API_BASE}/files/${fileId}?addParents=${newParentId}&removeParents=${oldParentId}`,
     {
       method: 'PATCH',
-      headers: { 'Authorization': `Bearer ${accessToken}` }
+      headers: { 
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json' // Added missing header
+      },
+      body: JSON.stringify({}) // Drive API requires a body for PATCH requests
     }
   );
   
-  if (!response.ok) throw new Error(`Failed to move file: ${response.statusText}`);
+  if (!response.ok) {
+    // Attempt to parse the exact error message from Google's response
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage = errorData.error?.message || response.statusText || response.status;
+    throw new Error(errorMessage);
+  }
+  
   return await response.json();
 }
 

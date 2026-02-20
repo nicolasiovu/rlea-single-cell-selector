@@ -36,6 +36,7 @@ export default function Processing({ config, accessToken }) {
   const [pendingCrop, setPendingCrop] = useState(null);
   const [defaultLabel, setDefaultLabel] = useState('phytolith');
   const [showSettings, setShowSettings] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
 
   useEffect(() => {
     if (!config || !accessToken) {
@@ -141,7 +142,10 @@ export default function Processing({ config, accessToken }) {
     }
   };
 
-  const markAsComplete = async () => {
+ const markAsComplete = async () => {
+    if (isMoving) return;
+    setIsMoving(true); // Disable button
+
     try {
       // Move immediately to completed folder upon clicking 'Done'
       await moveFile(
@@ -163,6 +167,8 @@ export default function Processing({ config, accessToken }) {
     } catch (error) {
        alert('Error moving file: ' + error.message);
        console.error(error);
+    } finally {
+      setIsMoving(false); // Re-enable button
     }
   };
 
@@ -510,7 +516,7 @@ export default function Processing({ config, accessToken }) {
               }}
             >
               <CheckCircle size={16} />
-              Done (N)
+              {isMoving ? 'Moving...' : Done (N)}
             </button>
           </div>
 
