@@ -112,13 +112,32 @@ export async function deleteFile(fileId, accessToken) {
 }
 
 export async function moveFile(fileId, newParentId, accessToken) {
-  // Step 1: Copy the file to the completed folder
-  const copiedFile = await copyFile(fileId, newParentId, accessToken);
+  // 1. Ask Google Drive exactly what folder the file is currently in
+  const parentRes = await fetch(
+    `${DRIVE_API_BASE}/files/${fileId}?fields=parents`,
+    { headers: { 'Authorization': `Bearer ${accessToken}` } }
+  );
+
+  if (!parentRes.ok) throw new Error('Failed to fetch current file parents');
   
-  // Step 2: Delete the original file from the input folder
-  await deleteFile(fileId, accessToken);
-  
-  return copiedFile; // Return the new file reference just in case
+  const parentData = await parentRes.json();
+  const previousParents = parentData.parents?.join(',') || '';
+
+  // 2. Move the file using EXACTLY the syntax from your old app
+  const response = await fetch(
+    `${DRIVE_API_BASE}/files/${fileId}?addParents=${newParentId}&removeParents=${previousParents}`,
+    {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${accessToken}` } // Exactly like the old app!
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error?.message || response.statusText);
+  }
+
+  return await response.json();
 }
 
 // Keep this in case you ever want to revert back to batch processing later
