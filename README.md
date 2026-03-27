@@ -1,6 +1,7 @@
 # RLEA Single-Cell Selector Web App
 
-in development
+Select boxes to upload from each unprocessed single-cell image
 
-log:
-- is probably not working
+Plans: update UI because its a bit much
+
+* pretty vibe coded, its basically a web version of the sorting app but with some box dragging functionality
